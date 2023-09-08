@@ -112,8 +112,17 @@ if(isset($_GET["refresh"])) {
 						}
 					}
 					if(!$xml->phonebook) {
-						$log->newEntry ("directory.php: execute: refresh > phonebook id=".$tmp_telefonbuch." does not exist - download-process is stopped");
-						break;
+						if($tmp_telefonbuch < 240) { // no more local books, jump to external books
+							$tmp_telefonbuch = 240;
+							continue;
+						}else if($tmp_telefonbuch < 255) { // no more external books, jump to internal phones
+							$tmp_telefonbuch = 255;
+							continue;
+						}else{
+							$log->newEntry ("directory.php: execute: refresh > phonebook id=".$tmp_telefonbuch." does not exist - download-process is stopped");
+							
+							break;
+						}
 					}
 					if ((bool) file_put_contents("books/$tmp_telefonbuch.xml",$book, LOCK_EX)) {
 						$log->newEntry ("directory.php: execute: refresh > phonebook id=".$tmp_telefonbuch." saved");
@@ -126,16 +135,28 @@ if(isset($_GET["refresh"])) {
 				curl_close($ch);
 			}
 
-			} else {
+		} else {
 			$log->newEntry ("directory.php: execute: refresh > webserver is running on Fritz!Box");
 			do { // for Fritzboxes with webserver -> direct copy
+				$log->newEntry ("directory.php: execute: refresh > try to export phonebook: id=".$tmp_telefonbuch);
 				shell_exec("pbd --exportbook " . $tmp_telefonbuch);
 				// shell_exec("cat /tmp/pbd.export > " . FRITZBOX_LOCAL_PATH . $tmp_telefonbuch . ".xml");
 				// if (!file_exists(FRITZBOX_LOCAL_PATH . $tmp_telefonbuch . ".xml")) {
 				//	break;
 				// }
 				if (!copy("/tmp/pbd.export", FRITZBOX_LOCAL_PATH . $tmp_telefonbuch . ".xml")) {
-					break;
+					// distinction below is untested!
+					if($tmp_telefonbuch < 240) { // no more local books, jump to external books
+						$tmp_telefonbuch = 240;
+						continue;
+					}else if($tmp_telefonbuch < 255) { // no more external books, jump to internal phones
+						$tmp_telefonbuch = 255;
+						continue;
+					}else{
+						$log->newEntry ("directory.php: execute: refresh > phonebook id=".$tmp_telefonbuch." does not exist - export-process is stopped");
+
+						break;
+					}
 				}
 				$tmp_telefonbuch++;
 			} while (true);
@@ -209,7 +230,12 @@ if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
                $input = file_get_contents("books/$book");
                $xml = simplexml_load_string($input);
                $attributes = $xml->phonebook->attributes();
-               $name = $attributes["name"] . " (" . PB_NAME_GENERAL . ")";
+			   $name = $attributes["name"];
+			   if(empty($name)) { // names for built-in unnamed books
+					if($book == "0.xml")  $name = PB_PHONEBOOK;
+					else if($book == "255.xml")  $name = PB_INTERNAL;
+			   }
+               $name .= " (" . PB_NAME_GENERAL . ")";
                $get = $_GET;
                unset($get['refresh']);
                $url = "http://" . $_SERVER["SERVER_NAME"] . $_SERVER["PHP_SELF"] . '?' . http_build_query(array_merge($get,array("book"=>$book)));
@@ -252,12 +278,13 @@ if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
         }
     }
     if(isset($_GET["querynumber"]) && strlen($_GET["querynumber"])){
-		$log.newEntry ("directory.php: execute: querynumber");
+		$log->newEntry ("directory.php: execute: querynumber");
         for($i = count($xml->phonebook->contact)-1; $i >= 0; --$i){
             if($xml->phonebook->contact[$i]->telephony){
                 $remove = true;
                 for($j = count($xml->phonebook->contact[$i]->telephony->number)-1; $j >= 0; --$j){
-                    $number =  preg_replace('/[^0-9+]/', '', $xml->phonebook->contact[$i]->telephony->number[$j]);
+                    $number =  preg_replace('/[^0-9+*#]/', '', $xml->phonebook->contact[$i]->telephony->number[$j]);
+					if($tmp_book == "255.xml")  $number = "**" . $number; // prefix for internal phones
                     if(stripos($number, $_GET['querynumber']) !== false){
                         $remove = false;
                     }
@@ -281,7 +308,12 @@ if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
             $attributes = $xml->phonebook->attributes();
 
             if(count($xml->phonebook->contact)>0){
-                $menu = new CiscoIpPhoneMenu(PB_NAME_GENERAL . ' ' . PB_PHONEBOOK, $attributes['name']);
+				$name = $attributes["name"];
+				if(empty($name)) { // names for built-in unnamed books
+						if($tmp_book == "0.xml")  $name = PB_PHONEBOOK;
+						else if($tmp_book == "255.xml")  $name = PB_INTERNAL;
+				}
+                $menu = new CiscoIpPhoneMenu(PB_NAME_GENERAL . ' ' . PB_PHONEBOOK, $name);
                 for ($i = $offset; $i < count($xml->phonebook->contact) && $i<$offset+30; ++$i){ 
                     $name = $xml->phonebook->contact[$i]->person->realName;
 					$get = $_GET;
@@ -364,8 +396,9 @@ if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
             $menu = new CiscoIpPhoneDirectory(PB_NAME_GENERAL . ' ' . PB_PHONEBOOK, $name);
             for ($i = 0; $i < count($xml->phonebook->contact[$id]->telephony->number); ++$i){
                 $attributes = $xml->phonebook->contact[$id]->telephony->number[$i]->attributes();
-                $number = preg_replace('/[^0-9+]/', '', $xml->phonebook->contact[$id]->telephony->number[$i]);
-                $type = (string) $attributes["type"];
+                $number = preg_replace('/[^0-9+*#]/', '', $xml->phonebook->contact[$id]->telephony->number[$i]);
+				if($tmp_book == "255.xml")  $number = "**" . $number; // prefix for internal phones
+				$type = (string) $attributes["type"];
                 $label = "Sonstige";
                 if(array_key_exists($type, $translation)){
                     $label = $translation[$type];

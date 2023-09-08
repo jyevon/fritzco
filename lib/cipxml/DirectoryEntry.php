@@ -20,7 +20,7 @@ class DirectoryEntry extends XMLElement{
     
     public function setTelephone($telephone, $correct=true) {
         if($correct){
-            $telephone = preg_replace('/[^0-9+]/', '', $telephone);
+            $telephone = preg_replace('/[^0-9+*#]/', '', $telephone);
         }
         if($telephone && strlen($telephone)>32){
             throw new \LengthException('Telephone must have not more than 32 characters');

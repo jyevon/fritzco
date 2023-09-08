@@ -25,6 +25,7 @@
  define ('PB_FIELD_EMAIL', 'eMail');
  define ('PB_PHONEBOOK', 'Telefonbuch');
  define ('PB_PHONEBOOKS', 'Telefonbücher');
+ define ('PB_INTERNAL', 'Interne Nummern');
  define ('PB_SELECT_PHONEBOOK', 'Telefonbuch auswählen');
  define ('PB_BUTTON_SELECT', 'Auswählen');
  define ('PB_BUTTON_DIAL', 'Wählen');
