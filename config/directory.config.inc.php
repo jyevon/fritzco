@@ -19,7 +19,7 @@
 	
 	$show_BookSelection = true; // erlaubt Rücksprung zur Telefonbuchauswahl (false sinnvoll, wenn nur ein Telefonbuch vorhanden)
 	$show_QuickDial = true;
-	define ('QUICKDIAL_URL', 'http://192.168.178.33/cisco/quickdial.php'); // Pfad zu separatem Telefonbuch mit eigenen, festen internen Nummern.
+	//define ('QUICKDIAL_URL', 'http://192.168.178.33/cisco/quickdial.php'); // Pfad zu separatem Telefonbuch mit eigenen, festen internen Nummern.
 	define ('QUICKDIAL_NAME', 'Kurzwahlen');
 	
 	$runon_Fritzbox = false; // Wenn Script direkt auf modifizierter FB eingesetzt wird, kann das erste Telefonbuch lokal kopiert werden

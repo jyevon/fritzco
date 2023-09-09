@@ -266,7 +266,11 @@ if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
             }
         }
 		if ($show_QuickDial) {
-          $menu->addMenuItem(new MenuItem(QUICKDIAL_NAME, QUICKDIAL_URL));
+			if(!defined('QUICKDIAL_URL')) {
+				define('QUICKDIAL_URL', $url = "http://" . $_SERVER["SERVER_NAME"]
+				. substr($_SERVER["PHP_SELF"], 0, strrpos($_SERVER["PHP_SELF"], '/')) . '/quickdial.php');
+			}
+          	$menu->addMenuItem(new MenuItem(QUICKDIAL_NAME, QUICKDIAL_URL));
 		}
 		
         $menu->addSoftKeyItem(new SoftKeyItem(PB_BUTTON_SELECT, 1, 'SoftKey:Select'));
