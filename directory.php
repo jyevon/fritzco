@@ -127,8 +127,8 @@ if(isset($_GET["refresh"])) {
 						if($tmp_telefonbuch < 240) { // no more local books, jump to external books
 							$tmp_telefonbuch = 240;
 							continue;
-						}else if($tmp_telefonbuch < 255) { // no more external books, jump to internal phones
-							$tmp_telefonbuch = 255;
+						}else if($tmp_telefonbuch < 255) { // read every external book + internal phones
+							$tmp_telefonbuch++;
 							continue;
 						}else{
 							$log->newEntry ("directory.php: execute: refresh > phonebook id=".$tmp_telefonbuch." does not exist - download-process is stopped");
@@ -139,7 +139,7 @@ if(isset($_GET["refresh"])) {
 
 					if($clear_books) { // keep old downloads on errors - until first new arrives
 						foreach(scandir("books") as $old_book){
-							if(is_file("books/$old_book")){
+							if(is_file("books/$old_book") && strpos($book,'.xml') !== false){
 								unlink("books/$old_book");
 							}
 						}
@@ -171,8 +171,8 @@ if(isset($_GET["refresh"])) {
 					if($tmp_telefonbuch < 240) { // no more local books, jump to external books
 						$tmp_telefonbuch = 240;
 						continue;
-					}else if($tmp_telefonbuch < 255) { // no more external books, jump to internal phones
-						$tmp_telefonbuch = 255;
+					}else if($tmp_telefonbuch < 255) { // read every external book + internal phones
+						$tmp_telefonbuch++;
 						continue;
 					}else{
 						$log->newEntry ("directory.php: execute: refresh > phonebook id=".$tmp_telefonbuch." does not exist - export-process is stopped");
@@ -221,7 +221,7 @@ if(isset($_GET["refresh"])) {
 
 $has_books = false;
 foreach(scandir("books") as $book){
-		if(is_file("books/$book") && strpos($book,'.xml') !== false){
+	if(is_file("books/$book") && strpos($book,'.xml') !== false){
 		$has_books=true;
 		break;
 	}
