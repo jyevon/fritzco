@@ -39,6 +39,8 @@
  define ('PB_BUTTON_NEXT_PAGE', 'Next Page');
  define ('PB_NO_PHONEBOOKS', 'No phone books found');
  define ('PB_NO_PHONEBOOKS_DESC', 'There are no phone books present. By pressing "Refresh" data will be read from ' . PB_NAME_GENERAL . '. This may take a couple of seconds. Please refresh from ' . PB_NAME_GENERAL . ' phone book after any changes made.');
+ define ('PB_PHONEBOOK_UNAVAILABLE', 'Phone book unavailable');
+ define ('PB_PHONEBOOK_UNAVAILABLE_DESC', 'The selected phone book is not present, By pressing "Refresh" data will be read from ' . PB_NAME_GENERAL . '. This may take a couple of seconds. Please refresh from ' . PB_NAME_GENERAL . ' phone book after any changes made.');
  define ('PB_NO_ENTRIES', 'No records found');
  define ('PB_NO_ENTRIES_DESC', 'The address book is empty or no records match the search criteria');
  define ('PB_INPUT_QUERY', 'Please enter name or number');

@@ -288,7 +288,24 @@ if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
 	  $tmp_book = "$telefonbuch.xml";
 	}
 	
-    $input = file_get_contents("books/".$tmp_book);
+    $input = @file_get_contents("books/".$tmp_book);
+	if($input === false) {
+		$log->newEntry ("directory.php: execute: phonebook ".$tmp_book." not present");
+		$menu = new CiscoIpPhoneText(PB_PHONEBOOK, PB_PHONEBOOK_UNAVAILABLE, PB_PHONEBOOK_UNAVAILABLE_DESC);
+		$url = "http://" . $_SERVER["SERVER_NAME"] . $_SERVER["PHP_SELF"];
+		if ($show_BookSelection) { 
+			$menu->addSoftKeyItem(new SoftKeyItem(PB_BUTTON_BACK, 1, $url));
+		} else {
+			$menu->addSoftKeyItem(new SoftKeyItem(PB_BUTTON_EXIT, 1, 'Init:Directories'));
+		}
+		$url .= '?' . http_build_query(array_merge($_GET,array("refresh"=>true)));
+		$menu->addSoftKeyItem(new SoftKeyItem(PB_BUTTON_REFRESH, 4, $url));
+		echo '<?xml version="1.0" encoding="utf-8" ?>';
+		echo (string) $menu; 
+
+		return;
+	}
+
     $xml = simplexml_load_string($input);
 
     if(isset($_GET["queryname"]) && strlen($_GET["queryname"])){
