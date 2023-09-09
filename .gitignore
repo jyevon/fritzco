@@ -1,0 +1,6 @@
+# Ignore all these files/dirs:
+books/
+log/
+
+# Except for:
+!.gitkeep

@@ -52,17 +52,14 @@ if(isset($_GET["refresh"])) {
 			if (((bool)$ch===false) OR (curl_getinfo($ch, CURLINFO_RESPONSE_CODE)!=200)) {
 				if (curl_getinfo($ch, CURLINFO_RESPONSE_CODE) != null) {
 					$http_response_code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-					$log->newEntry("A");
 				} else {
 					$html_response_code = "n/a";
-					$log->newEntry("B");
 				}
 				$log->newEntry ("directory.php: execute: refresh > ERROR: HTTP-CODE ".$html_response_code." => ".curl_getinfo($ch, CURLINFO_EFFECTIVE_URL));
 			} else {
 				$session_status_simplexml = simplexml_load_string($login);
 				$log->newEntry ("directory.php: execute: refresh > SID={$session_status_simplexml->SID}");
 				if ($session_status_simplexml->SID != '0000000000000000') {
-					$log->newEntry ("directory.php: execute: refresh > SID={$session_status_simplexml->SID}");
 					$SID = $session_status_simplexml->SID;
 				} else {
 					$challenge = $session_status_simplexml->Challenge;
@@ -79,7 +76,8 @@ if(isset($_GET["refresh"])) {
 					curl_setopt($ch, CURLOPT_POSTFIELDS, $StringCURLOptPostfields);
 					$sendlogin = curl_exec($ch);
 					$session_status_simplexml = simplexml_load_string($sendlogin);
-
+					$log->newEntry ("directory.php: execute: refresh > SID={$session_status_simplexml->SID}");
+					
 					if ($session_status_simplexml->SID != '0000000000000000'){
 						$log->newEntry ("directory.php: execute: refresh > Login successful");
 						$SID = $session_status_simplexml->SID;
@@ -225,12 +223,13 @@ $has_books = false;
 foreach(scandir("books") as $book){
 		if(is_file("books/$book") && strpos($book,'.xml') !== false){
 		$has_books=true;
+		break;
 	}
 }
 if ($has_books) {
-	$log->newEntry ("directory.php: phonebook exists");
+	$log->newEntry ("directory.php: phonebooks exist");
 } else {
-	$log->newEntry ("directory.php: phonebook dosn't exist");
+	$log->newEntry ("directory.php: no phonebook exists");
 }
 
 if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
@@ -305,25 +304,23 @@ if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
 		$log->newEntry ("directory.php: execute: querynumber");
         for($i = count($xml->phonebook->contact)-1; $i >= 0; --$i){
             if($xml->phonebook->contact[$i]->telephony){
-                $remove = true;
                 for($j = count($xml->phonebook->contact[$i]->telephony->number)-1; $j >= 0; --$j){
                     $number =  preg_replace('/[^0-9+*#]/', '', $xml->phonebook->contact[$i]->telephony->number[$j]);
 					if($tmp_book == "255.xml")  $number = "**" . $number; // prefix for internal phones
                     if(stripos($number, $_GET['querynumber']) !== false){
-                        $remove = false;
+                        continue 2; // move on to next contact
                     }
                 }
-                if($remove){
-                    $dom=dom_import_simplexml($xml->phonebook->contact[$i]);
-                    $dom->parentNode->removeChild($dom);
-                }
+
+				$dom=dom_import_simplexml($xml->phonebook->contact[$i]);
+				$dom->parentNode->removeChild($dom);
             }
         }
     }
 
     if(!isset($_GET["id"])){
-		$log->newEntry ("directory.php: execute: id");
-        if(!isset($_GET["search"])){
+		$log->newEntry ("directory.php: execute: no id");
+		if(!isset($_GET["search"])){
             // header('Expires: ' . gmdate('D, d M Y H:i:s', time()-60*60) . ' GMT');
             $offset = 0;
             if(isset($_GET["offset"])){
@@ -375,7 +372,7 @@ if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
                     $menu->addSoftKeyItem(new SoftKeyItem(PB_BUTTON_NEXT_PAGE, 4, $url));
 					$menu->addKeyItem(new KeyItem(Key::NavRight,$url));
                 } else {
-				    $url = 'http://' . $_SERVER['SERVER_NAME'] .  $_SERVER['PHP_SELF'] .  '?refresh';
+				    $url = 'http://' . $_SERVER['SERVER_NAME'] .  $_SERVER['PHP_SELF'] .  '?' . http_build_query(array_merge($_GET,array("refresh"=>true)));
 					$menu->addSoftKeyItem(new SoftKeyItem(PB_BUTTON_REFRESH, 4, $url));
 				}
 				
@@ -411,6 +408,7 @@ if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
         }
     }
     else{
+        $log->newEntry ("directory.php: execute: id");
         $id = (int) $_GET["id"];
         $name = $xml->phonebook->contact[$id]->person->realName;
         if(strlen($name)>32){
@@ -444,7 +442,7 @@ if((!isset($_GET["book"]) && ($show_BookSelection)) or (!$has_books))
         }
         else{
             $text = PB_NO_FURTHER_INFORMATION;
-            if(count($xml->phonebook->contact[$id]->services->email)){
+			if(isset($xml->phonebook->contact[$id]->services->email) && count($xml->phonebook->contact[$id]->services->email)){
                 $text = PB_FIELD_EMAIL . ":\n";
                 for ($i = 0; $i < count($xml->phonebook->contact[$id]->services->email); ++$i){
                     $attributes = $xml->phonebook->contact[$id]->services->email[$i]->attributes();
