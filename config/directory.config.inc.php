@@ -7,7 +7,7 @@
  */
 
     $fritzbox_ip = 'fritz.box'; //Hier die IP oder den Hostname der FritzBox eintragen (meist fritz.box)
-    // $fritzbox_user = "User"; // Benutzername, wenn in der Fritz!Box aktiviert.
+    $fritzbox_user = "your_fritz1234"; // Benutzername (Pflicht ab Fritz OS 7.25!), wenn in der Fritz!Box aktiviert. Dieser Benutzer benötigt die Berechtigung "FRITZ!Box-Einstellungen"!
 	$fritzbox_password = 'yourpassword'; //Hier das Passwort eintragen
 	
     

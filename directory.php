@@ -87,17 +87,14 @@ if(isset($_GET["refresh"])) {
 						$log->newEntry ("directory.php: execute: refresh > Login failed");
 						$menu = new CiscoIpPhoneText(PB_REFRESH, PB_NAME_GENERAL . ' ' . PB_LOGIN_FAILED, PB_ADMIN_CHECKPWD);
 						echo '<?xml version="1.0" encoding="utf-8" ?>';
-						echo (string) $menu; 
+						echo (string) $menu;
+
+						curl_close($ch);
 						return;
 					}
 				}
 
-				foreach(scandir("books") as $book){
-					if(is_file("books/$book")){
-						unlink("books/$book");
-					}
-				}
-
+				$clear_books = true;
 				$tmp_telefonbuch = $telefonbuch;
 
 				do {
@@ -105,12 +102,29 @@ if(isset($_GET["refresh"])) {
 					curl_setopt($ch, CURLOPT_URL, $fritzbox_cfg);
 					curl_setopt($ch, CURLOPT_POSTFIELDS, array("sid" => $SID, "PhonebookId" => $tmp_telefonbuch, "PhonebookExportName" => "Telefonbuch", "PhonebookExport" => ""));
 					$book = curl_exec($ch);
+					if(empty($book)) {
+						$log->newEntry ("directory.php: execute: refresh > phonebook id=".$tmp_telefonbuch." - ERROR: response is empty - download-process is stopped. Please check permission");
+						$menu = new CiscoIpPhoneText(PB_REFRESH, PB_NAME_GENERAL . ' ' . PB_BOOKS_ERROR, PB_ADMIN_CHECKPERM);
+						echo '<?xml version="1.0" encoding="utf-8" ?>';
+						echo (string) $menu; 
+
+						curl_close($ch);
+						return;
+					}
 					$xml = simplexml_load_string($book);
 					if ((bool) $xml === false) { // catch error!
 						foreach(libxml_get_errors() as $error) {
 							$log->newEntry ("directory.php: execute: refresh > phonebook id=".$tmp_telefonbuch." - ERROR: ". $error->message);
 						}
+
+						$menu = new CiscoIpPhoneText(PB_REFRESH, PB_NAME_GENERAL . ' ' . PB_BOOKS_ERROR, PB_NO_FURTHER_INFORMATION);
+						echo '<?xml version="1.0" encoding="utf-8" ?>';
+						echo (string) $menu;
+
+						curl_close($ch);
+						return;
 					}
+
 					if(!$xml->phonebook) {
 						if($tmp_telefonbuch < 240) { // no more local books, jump to external books
 							$tmp_telefonbuch = 240;
@@ -124,6 +138,16 @@ if(isset($_GET["refresh"])) {
 							break;
 						}
 					}
+
+					if($clear_books) { // keep old downloads on errors - until first new arrives
+						foreach(scandir("books") as $old_book){
+							if(is_file("books/$old_book")){
+								unlink("books/$old_book");
+							}
+						}
+						$clear_books = false;
+					}
+
 					if ((bool) file_put_contents("books/$tmp_telefonbuch.xml",$book, LOCK_EX)) {
 						$log->newEntry ("directory.php: execute: refresh > phonebook id=".$tmp_telefonbuch." saved");
 					} else {

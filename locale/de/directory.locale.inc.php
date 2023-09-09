@@ -10,7 +10,8 @@
  define ('PB_NAME_GENERAL', 'FRITZ!Box');
  define ('PB_REFRESH', 'Aktualisieren');
  define ('PB_LOGIN_FAILED', 'Login fehlgeschlagen');
- define ('PB_ADMIN_CHECKPWD', 'Administrator: Bitte das ' . PB_NAME_GENERAL . '-Passwort in der config.php.inc überprüfen!');
+ define ('PB_ADMIN_CHECKPWD', 'Administrator: Bitte das ' . PB_NAME_GENERAL . '-Passwort in directory.config.inc.php überprüfen!');
+ define ('PB_ADMIN_CHECKPERM', 'Administrator: Bitte die Berechtigungen für den ' . PB_NAME_GENERAL . '-Benutzer aus directory.config.inc.php überprüfen!');
  define ('PB_APP_CALLSMISSED', 'Anrufe in Abwesenheit');
  define ('PB_APP_CALLSRECEIVED', 'Angenommene Anrufe');
  define ('PB_APP_CALLSPLACED', 'Gewählte Rufnummern');
